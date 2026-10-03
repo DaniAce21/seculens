@@ -1,58 +1,128 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# SecuLens
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+**Security Monitoring & Analytics Platform**
 
-## About Laravel
+Plataforma de monitoreo y analisis de seguridad construida con Laravel y
+PostgreSQL. Registra eventos de seguridad, aplica reglas de deteccion
+sobre ellos, genera alertas y permite a un analista investigar y
+resolver el hallazgo.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Proyecto de portafolio para Ingenieria en Ciberseguridad / Analista
+Programador.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Requisitos
 
-## Learning Laravel
+| Componente | Version |
+|---|---|
+| PHP | 8.3 o superior (con `pdo_pgsql`) |
+| Composer | 2.x |
+| PostgreSQL | 14 o superior |
+| Node.js | 20 o superior (solo para compilar assets) |
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Puesta en marcha
 
 ```bash
-composer require laravel/boost --dev
+# 1. Dependencias de PHP
+composer install
 
-php artisan boost:install
+# 2. Configuracion
+cp .env.example .env
+php artisan key:generate
+
+# 3. Base de datos
+# Crear la base 'seculens' y ajustar DB_USERNAME / DB_PASSWORD en .env
+php artisan migrate --seed
+
+# 4. Frontend
+npm install
+npm run build
+
+# 5. Servidor
+php artisan serve
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+La aplicacion queda disponible en `http://localhost:8000`.
 
-## Contributing
+### Base de datos de pruebas
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Las pruebas corren contra PostgreSQL, no contra SQLite. La razon esta
+documentada en [docs/architecture.md](docs/architecture.md): la
+migracion `alerts_active_unique` crea un indice unico parcial con
+sintaxis nativa que SQLite no reproduce con fidelity, de modo que una
+prueba sobre SQLite no ejercitaria la restriccion de integridad.
 
-## Code of Conduct
+```bash
+createdb -U postgres seculens_testing
+php artisan test
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Estructura
 
-## Security Vulnerabilities
+```
+app/
+├── Enums/          Conjuntos cerrados: severidad, estado de alerta
+├── Http/           Controllers, Requests, Middleware
+├── Models/         Entidades, relaciones, scopes
+├── Policies/       Autorizacion en el servidor
+└── Services/       Deteccion, alertas, incidentes
+database/
+├── factories/      Datos de prueba
+├── migrations/     Esquema
+└── seeders/        Escenario de laboratorio
+resources/views/    Blade: layouts, components, y vistas por modulo
+public/
+├── css/            CSS puro, separado por responsabilidad
+└── js/             JavaScript vanilla, separado por modulo
+tests/
+├── Feature/        Pruebas que atraviesan HTTP y base de datos
+└── Unit/           Pruebas de logica aislada
+docs/               Documentacion tecnica
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Documentacion
 
-## License
+| Documento | Contenido |
+|---|---|
+| [docs/architecture.md](docs/architecture.md) | Capas, flujo, decisiones de PostgreSQL, concurrencia |
+| [docs/detection-rules.md](docs/detection-rules.md) | Reglas de deteccion, parametros y casos limite |
+| [docs/security.md](docs/security.md) | Medidas de seguridad aplicadas y pendientes |
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Pruebas
+
+```bash
+php artisan test
+php artisan test --filter=DetectionServiceTest
+```
+
+Las pruebas de deteccion cubren los limites exactos de cada regla: el
+umbral inferior, el superior, el borde de la ventana temporal y los tipos
+de evento que la regla debe ignorar.
+
+## Estado del proyecto
+
+| Fase | Alcance | Estado |
+|---|---|---|
+| 0 | Auditoria del proyecto existente | Completada |
+| 1 | Nucleo: alertas, indices, pruebas de deteccion | Completada |
+| 2 | Gestion de alertas (CRUD, filtros, transiciones) | Pendiente |
+| 3 | Incidentes | Pendiente |
+| 4 | Autenticacion y RBAC | Pendiente |
+| 5 | API REST y OpenAPI | Pendiente |
+| 6-8 | Frontend Blade, JavaScript, CSS | Pendiente |
+| 9 | Suite de pruebas completa | Pendiente |
+| 10 | Endurecimiento de seguridad | Pendiente |
+| 11 | Registro de auditoria | Pendiente |
+| 12 | Documentacion final | Pendiente |
+
+## Reglas de deteccion activas
+
+**BRUTE_FORCE** — 5 o mas intentos `LOGIN_FAILED` desde la misma IP
+dentro de 5 minutos. Severidad `HIGH`.
+
+Detalle completo en [docs/detection-rules.md](docs/detection-rules.md).
+
+## Licencia
+
+MIT
