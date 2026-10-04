@@ -89,6 +89,42 @@ docs/               Documentacion tecnica
 | [docs/detection-rules.md](docs/detection-rules.md) | Reglas de deteccion, parametros y casos limite |
 | [docs/security.md](docs/security.md) | Medidas de seguridad aplicadas y pendientes |
 
+## Sensores IDS (API)
+
+La API `/api/v1/alerts` exige el token de un sensor registrado. Solo se guarda
+el hash del token; el token en claro se muestra una única vez al crearlo.
+
+```bash
+php artisan ids:sensor-create sensor-dmz     # crea el sensor y muestra su token
+php artisan ids:sensor-list                  # sensores, último uso y estado
+php artisan ids:sensor-revoke sensor-dmz     # el token deja de funcionar al instante
+```
+
+Ejemplo de envío de una alerta desde un sensor:
+
+```bash
+curl -X POST http://localhost:8000/api/v1/alerts \
+  -H "Authorization: Bearer ids_xxxxxxxx" -H "Accept: application/json" \
+  -d severity=high -d alert_type="Port Scan" \
+  -d source_ip=45.33.32.156 -d destination_ip=10.0.0.5 -d signature="ET SCAN Nmap"
+```
+
+Límite: 120 peticiones por minuto. Sin token o con un token revocado la respuesta es `401`.
+
+## Exportaciones e informes
+
+- **CSV por día / semana / mes / año** en Incidentes, Eventos (respeta los filtros),
+  Alertas y el panel IDS. Cada exportación queda registrada en Auditoría.
+- **Informe imprimible** en *Análisis → Informes*: botón *Imprimir / Guardar PDF*.
+- **Informe por correo** con los CSV adjuntos:
+
+```bash
+# .env:  REPORT_MAIL_TO="soc@empresa.com,jefe@empresa.com"
+php artisan reports:send                          # semana anterior
+php artisan reports:send --period=month --date=2026-09-01 --to=yo@empresa.com
+php artisan schedule:work                         # envío automático cada lunes 08:00
+```
+
 ## Pruebas
 
 ```bash

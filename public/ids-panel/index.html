@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Simulador IDS · SecuLens</title>
+    <!--
+        Rutas ABSOLUTAS a los assets. Con rutas relativas ("style.css"), si se
+        abria el panel como /ids-panel (sin barra final) el navegador pedia
+        /style.css y /script.js -> 404 -> pagina en blanco y sin estilos.
+        El parametro ?v= fuerza al navegador a descartar la copia en cache.
+    -->
+    <link rel="stylesheet" href="/ids-panel/style.css?v=3.5">
+</head>
+<body>
+    <!-- HEADER -->
+    <header class="header">
+        <div class="header-left">
+            <!-- El logo es un enlace: al pulsarlo vuelve al dashboard principal -->
+            <a href="/" class="logo" title="Volver al dashboard principal">
+                <div class="logo-icon">🛡</div>
+                <div class="logo-text">
+                    <h1>CYBER_DEFENSE IDS</h1>
+                    <span class="subtitle">SIMULADOR DE TRÁFICO · DEMO</span>
+                </div>
+            </a>
+        </div>
+        <div class="header-center">
+            <div class="system-status">
+                <span class="status-dot"></span>
+                <span class="status-text">MODO SIMULACIÓN · DATOS FICTICIOS</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="alert-counter">
+                <span class="counter-label">ALERTAS ACTIVAS</span>
+                <span class="counter-value" id="globalAlertCount">0</span>
+            </div>
+            <div class="datetime" id="currentDateTime">--</div>
+            <!-- Volver al dashboard principal de SecuLens (ruta "/" de Laravel).
+                 Es un enlace normal: funciona aunque el JS no cargue. -->
+            <a href="/" class="back-btn" title="Volver al dashboard principal">← Dashboard</a>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <!-- KPI PANELS -->
+        <section class="kpi-grid">
+            <div class="kpi-card glass">
+                <div class="kpi-icon packets">⬡</div>
+                <div class="kpi-info">
+                    <span class="kpi-label">Paquetes Inspeccionados</span>
+                    <span class="kpi-value" id="kpiPackets">0</span>
+                    <span class="kpi-trend up">▲ +12.4%</span>
+                </div>
+            </div>
+            <div class="kpi-card glass">
+                <div class="kpi-icon latency">⏱</div>
+                <div class="kpi-info">
+                    <span class="kpi-label">Latencia del Sistema</span>
+                    <span class="kpi-value" id="kpiLatency">0 ms</span>
+                    <span class="kpi-trend down">▼ -3.2%</span>
+                </div>
+            </div>
+            <div class="kpi-card glass">
+                <div class="kpi-icon bandwidth">⇅</div>
+                <div class="kpi-info">
+                    <span class="kpi-label">Ancho de Banda</span>
+                    <span class="kpi-value" id="kpiBandwidth">0 Gbps</span>
+                    <span class="kpi-trend up">▲ +8.7%</span>
+                </div>
+            </div>
+            <div class="kpi-card glass">
+                <div class="kpi-icon threats">⚠</div>
+                <div class="kpi-info">
+                    <span class="kpi-label">Amenazas Bloqueadas</span>
+                    <span class="kpi-value" id="kpiThreatsBlocked">0</span>
+                    <span class="kpi-trend up">▲ +5.1%</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- THREAT DISTRIBUTION + ACTORS -->
+        <section class="panels-grid">
+            <div class="panel glass">
+                <div class="panel-header">
+                    <h2 class="panel-title">Distribución de Severidad</h2>
+                    <span class="panel-badge">EN VIVO</span>
+                </div>
+                <div class="panel-body">
+                    <div class="severity-chart">
+                        <div class="severity-bar">
+                            <div class="severity-bar-label">
+                                <span class="sev-dot critical"></span>
+                                <span>CRÍTICA</span>
+                                <span class="sev-count" id="sevCritical">0</span>
+                            </div>
+                            <div class="severity-bar-track">
+                                <div class="severity-bar-fill critical" id="sevCriticalBar" style="width:0%"></div>
+                            </div>
+                        </div>
+                        <div class="severity-bar">
+                            <div class="severity-bar-label">
+                                <span class="sev-dot high"></span>
+                                <span>ALTA</span>
+                                <span class="sev-count" id="sevHigh">0</span>
+                            </div>
+                            <div class="severity-bar-track">
+                                <div class="severity-bar-fill high" id="sevHighBar" style="width:0%"></div>
+                            </div>
+                        </div>
+                        <div class="severity-bar">
+                            <div class="severity-bar-label">
+                                <span class="sev-dot medium"></span>
+                                <span>MEDIA</span>
+                                <span class="sev-count" id="sevMedium">0</span>
+                            </div>
+                            <div class="severity-bar-track">
+                                <div class="severity-bar-fill medium" id="sevMediumBar" style="width:0%"></div>
+                            </div>
+                        </div>
+                        <div class="severity-bar">
+                            <div class="severity-bar-label">
+                                <span class="sev-dot low"></span>
+                                <span>BAJA</span>
+                                <span class="sev-count" id="sevLow">0</span>
+                            </div>
+                            <div class="severity-bar-track">
+                                <div class="severity-bar-fill low" id="sevLowBar" style="width:0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel glass">
+                <div class="panel-header">
+                    <h2 class="panel-title">Actores de Amenazas Activos</h2>
+                    <span class="panel-badge danger">TOP 5</span>
+                </div>
+                <div class="panel-body">
+                    <div class="threat-actors" id="threatActorsList">
+                        <!-- Se llena dinámicamente -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- LIVE ALERT STREAM -->
+        <section class="panel glass full-width">
+            <div class="panel-header">
+                <h2 class="panel-title">
+                    <span class="live-dot"></span>
+                    Flujo de alertas simuladas
+                </h2>
+                <div class="panel-controls">
+                    <div class="filter-buttons" id="filterButtons">
+                        <button class="filter-btn active" data-filter="ALL">Todas</button>
+                        <button class="filter-btn critical" data-filter="CRITICAL">Crítica</button>
+                        <button class="filter-btn high" data-filter="HIGH">Alta</button>
+                        <button class="filter-btn medium" data-filter="MEDIUM">Media</button>
+                        <button class="filter-btn low" data-filter="LOW">Baja</button>
+                    </div>
+                    <button class="action-btn" id="pauseBtn" title="Pausar/Reanudar flujo">
+                        <span id="pauseIcon">⏸</span> <span id="pauseText">Pausar</span>
+                    </button>
+                </div>
+            </div>
+            <div class="panel-body table-wrapper">
+                <table class="alert-table" id="alertTable">
+                    <thead>
+                        <tr>
+                            <th>FECHA/HORA</th>
+                            <th>SEVERIDAD</th>
+                            <th>TIPO DE ALERTA</th>
+                            <th>IP ORIGEN</th>
+                            <th>IP DESTINO</th>
+                            <th>FIRMA</th>
+                        </tr>
+                    </thead>
+                    <tbody id="alertTableBody">
+                        <!-- Se llena dinámicamente -->
+                    </tbody>
+                </table>
+                <div class="table-footer">
+                    <span id="tableStatus">Mostrando 0 de 0 alertas</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">Creado por <strong>Daniel Alejandro Aceitón Sepúlveda</strong></footer>
+
+    <!-- MODAL: Incident Inspection + Hex Viewer -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal glass" id="incidentModal">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    <span class="modal-icon">🔍</span>
+                    Inspección de Incidente
+                </h2>
+                <button class="modal-close" id="modalClose" title="Cerrar (Esc)">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-grid">
+                    <!-- Incident Details -->
+                    <div class="incident-details">
+                        <h3 class="section-label">DATOS DEL INCIDENTE</h3>
+                        <div class="detail-row">
+                            <span class="detail-key">ID:</span>
+                            <span class="detail-value mono" id="modalIncidentId">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-key">Timestamp:</span>
+                            <span class="detail-value mono" id="modalTimestamp">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-key">Severidad:</span>
+                            <span class="detail-value" id="modalSeverity">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-key">Tipo de Alerta:</span>
+                            <span class="detail-value mono" id="modalAlertType">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-key">IP origen:</span>
+                            <span class="detail-value mono" id="modalSourceIp">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-key">IP destino:</span>
+                            <span class="detail-value mono" id="modalDestIp">--</span>
+                        </div>
+                        <!-- "full": la firma es larga y ocupa las dos columnas -->
+                        <div class="detail-row full">
+                            <span class="detail-key">Firma:</span>
+                            <span class="detail-value mono" id="modalSignature">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-key">Protocolo:</span>
+                            <span class="detail-value mono" id="modalProtocol">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-key">Puerto:</span>
+                            <span class="detail-value mono" id="modalPort">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-key">Acción Tomada:</span>
+                            <span class="detail-value" id="modalAction">--</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-key">Confianza:</span>
+                            <span class="detail-value mono" id="modalConfidence">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Hex Viewer -->
+                    <div class="hex-viewer-section">
+                        <h3 class="section-label">VISOR HEX — PAYLOAD SIMULADO</h3>
+                        <div class="hex-viewer" id="hexViewer">
+                            <!-- Se llena dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/ids-panel/script.js?v=3.3"></script>
+</body>
+</html>

@@ -79,6 +79,20 @@ class Alert extends Model
     }
 
     /**
+     * Incidentes que han agrupado esta alerta.
+     *
+     * Una alerta puede pertenecer a varios incidentes a lo largo del
+     * tiempo: un ataque recurrente se reinvestiga cada vez, y cada
+     * investigacion es un incidente distinto.
+     */
+    public function incidents(): BelongsToMany
+    {
+        return $this->belongsToMany(Incident::class, 'incident_alert')
+            ->withPivot('linked_at')
+            ->withTimestamps();
+    }
+
+    /**
      * Filtra las alertas que siguen abiertas o en revision.
      *
      * El filtro se escribe con los valores del enum en lugar de texto

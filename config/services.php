@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    // Destinatarios del informe de seguridad por correo (comando reports:send).
+    // Varios separados por comas: REPORT_MAIL_TO="soc@empresa.com,jefe@empresa.com"
+    'reports' => [
+        'mail_to' => env('REPORT_MAIL_TO'),
+    ],
+
 ];

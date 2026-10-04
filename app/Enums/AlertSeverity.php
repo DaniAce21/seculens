@@ -32,7 +32,7 @@ enum AlertSeverity: string
             self::LOW => 'Baja',
             self::MEDIUM => 'Media',
             self::HIGH => 'Alta',
-            self::CRITICAL => 'Critica',
+            self::CRITICAL => 'Crítica',
         };
     }
 

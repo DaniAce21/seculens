@@ -4,11 +4,14 @@ namespace App\Services;
 
 use App\Enums\AlertSeverity;
 use App\Enums\AlertStatus;
+use App\Enums\AuditAction;
 use App\Models\Alert;
 use App\Models\SecurityEvent;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use InvalidArgumentException;
 use RuntimeException;
 
 /**
@@ -26,6 +29,10 @@ use RuntimeException;
  */
 class AlertService
 {
+    public function __construct(
+        private readonly AuditService $audit,
+    ) {}
+
     /**
      * Crea o actualiza una alerta a partir de un resultado de deteccion.
      *
@@ -206,6 +213,36 @@ class AlertService
 
         $alert->event_count = $detection['event_count'];
         $alert->save();
+    }
+
+    /**
+     * Cambia el estado de una alerta validando la transicion.
+     *
+     * @throws InvalidArgumentException si la transicion no es valida
+     */
+    public function changeStatus(Alert $alert, AlertStatus $target, User $actor): Alert
+    {
+        if (! $alert->canTransitionTo($target)) {
+            throw new InvalidArgumentException(
+                "No se puede pasar una alerta de {$alert->status->value} a {$target->value}."
+            );
+        }
+
+        $previous = $alert->status;
+
+        $alert->status = $target;
+        $alert->save();
+
+        $this->audit->tryLog(match ($target) {
+            AlertStatus::ACKNOWLEDGED => AuditAction::ALERT_ACKNOWLEDGED,
+            AlertStatus::RESOLVED => AuditAction::ALERT_RESOLVED,
+            AlertStatus::OPEN => AuditAction::ALERT_REOPENED,
+        }, $actor, $alert, [
+            'from' => $previous->value,
+            'to' => $target->value,
+        ]);
+
+        return $alert;
     }
 
     /**
