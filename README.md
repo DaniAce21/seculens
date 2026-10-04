@@ -142,15 +142,15 @@ de evento que la regla debe ignorar.
 |---|---|---|
 | 0 | Auditoria del proyecto existente | Completada |
 | 1 | Nucleo: alertas, indices, pruebas de deteccion | Completada |
-| 2 | Gestion de alertas (CRUD, filtros, transiciones) | Pendiente |
-| 3 | Incidentes | Pendiente |
-| 4 | Autenticacion y RBAC | Pendiente |
-| 5 | API REST y OpenAPI | Pendiente |
-| 6-8 | Frontend Blade, JavaScript, CSS | Pendiente |
-| 9 | Suite de pruebas completa | Pendiente |
-| 10 | Endurecimiento de seguridad | Pendiente |
-| 11 | Registro de auditoria | Pendiente |
-| 12 | Documentacion final | Pendiente |
+| 2 | Gestion de alertas (CRUD, filtros, transiciones) | Completada |
+| 3 | Incidentes | Completada |
+| 4 | Autenticacion y RBAC | Completada |
+| 5 | API REST y OpenAPI | Completada |
+| 6-8 | Frontend Blade, JavaScript, CSS | Completada |
+| 9 | Suite de pruebas completa | Completada |
+| 10 | Endurecimiento de seguridad | Completada |
+| 11 | Registro de auditoria | Completada |
+| 12 | Documentacion final | Completada |
 
 ## Reglas de deteccion activas
 
